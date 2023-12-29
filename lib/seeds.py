@@ -1,8 +1,6 @@
 from models import *
 import random
 from faker import Faker
-from sqlalchemy import inspect, select
-
 
 if __name__ == '__main__':
     faker = Faker()
@@ -26,7 +24,7 @@ if __name__ == '__main__':
         for i in range(10):
             roaster = Roaster(
                 name = f"{faker.word().capitalize()} {faker.word().capitalize()} Roastery",
-                location = faker.address()
+                location = f"{faker.city()}, {faker.state()}"
 
             )
             session.add(roaster)
@@ -49,8 +47,8 @@ if __name__ == '__main__':
             session.commit()
 
         
-# make 30 cafes and relate them to beans, then add to db
-        for i in range(30):
+# make 15 cafes and relate them to beans, then add to db
+        for i in range(15):
 
             # Generates a random roaster to relate to the cafe
             # Variablized so it can be used to grab the name of the roaster
@@ -68,7 +66,7 @@ if __name__ == '__main__':
             session.add(cafe)
             session.commit()
 
-            # Generates the list of coffees from a particular roaster
+            # Retrieves the list of coffees from the roaster assigned to the cafe
             coffee_list = session.query(Coffee).filter(Coffee.roaster_id == cafe.roaster_id).all()
 
             for j in range(3):
