@@ -4,13 +4,16 @@ from prettytable.colortable import ColorTable
 
 if __name__ == '__main__':
 
-
+# Welcomes the user and establishes a session
     with Session(engine) as session:
         print("Hello, Weird Coffee Person!")
         print("Welcome to your Specialty Coffee Manager")
 
 # all menus using 2.0 syntax (select-scalars) instead of 1.4 syntax (query)
 # may refactor seeds and models to do the same. If so, this comment should be deleted
+        
+# Get all roasters from the database
+        
         def get_roasters():
             roaster_list = session.scalars(select(Roaster))
             roaster_table = ColorTable()
@@ -24,7 +27,9 @@ if __name__ == '__main__':
                         coffee_string += f", {coffee.name}"
                 roaster_table.add_row([roaster.id, roaster.name, roaster.location, coffee_string])
             print(roaster_table)
-        
+
+# Get all coffees from the database
+            
         def get_coffees():
             coffee_list = session.scalars(select(Coffee))
             coffee_table = ColorTable()
@@ -39,6 +44,8 @@ if __name__ == '__main__':
                 coffee_table.add_row([coffee.id, coffee.name, coffee.roast_level, coffee.country_of_origin, coffee.roaster.name, cafe_string])
             print(coffee_table)
 
+# Get all cafes from the database
+            
         def get_cafes():
            cafe_list = session.scalars(select(Cafe))
            cafe_table = ColorTable()
@@ -52,6 +59,9 @@ if __name__ == '__main__':
                         coffee_string += f", {coffee.coffee_name}"
                 cafe_table.add_row([cafe.id, cafe.name, cafe.location, cafe.roaster_name, cafe.specialty, coffee_string])
            print(cafe_table)
+           
+
+# Roaster Menu asks for user input and calls the appropriate function
 
         def roaster_menu():
             roaster_question = [inquirer.List('roaster_menu', 
@@ -67,6 +77,8 @@ if __name__ == '__main__':
                 edit_roaster()
             elif(roaster_response['roaster_menu'] == "Remove Roaster"):
                 remove_roaster()
+
+# Add Roaster asks for basic roaster info, then calls roast_beans to add coffees to the roaster
         
         def add_roaster():
             name = input("What is the name of the roastery?")
@@ -82,6 +94,9 @@ if __name__ == '__main__':
             get_roasters()
             print(f"{new_roaster.name} added!")
             roaster_menu()
+
+# roast_beans asks for coffee info, then adds it to the database with a relationship 
+# to the roaster passed from add_roaster
         
         def roast_beans(roaster):
             coffee_list = []
@@ -108,11 +123,11 @@ if __name__ == '__main__':
                 finished = input("Is this all the coffee you want to add? Y/N")
                 if finished.upper() == "Y":
                     break
-            print(f"{roaster.name} is now roasting {len(coffee_list)} coffees!")
+            print(f"{roaster.name} is now roasting:")
             for coffee in coffee_list:
                 print(coffee.name)
             
-
+# Edits roaster info
         
         def edit_roaster():
             roaster_id = int(input("Using the id from the table above, which roaster would you like to edit?"))
@@ -125,6 +140,7 @@ if __name__ == '__main__':
                 finished = input(f"Is this correct? Y/N")
                 if finished.upper() == "Y":
                     break
+# Waits for confirmation before updating the roaster
             current_roaster.name = new_name
             current_roaster.location = new_location
             session.add(current_roaster)
@@ -132,7 +148,10 @@ if __name__ == '__main__':
             get_roasters()
             print(f"{current_roaster.name} updated!")
             roaster_menu()
-        
+
+# Removes roaster from database. If cafes are affected, 
+# calls find_new_roaster to update them
+
         def remove_roaster():
             response = int(input("Using the id from the table above, which roaster would you like to delete? (Enter 0 to cancel)"))
             while True:
@@ -152,9 +171,15 @@ if __name__ == '__main__':
                         for cafe in effected_cafes:
                             find_new_roaster(cafe)
                         break
+                    elif confirm.upper() == "N":
+                        get_roasters()
+                        roaster_menu()
+                        break
             get_roasters()
             print(f"{to_delete.name} deleted!")
             roaster_menu()
+
+# Updates cafes that were affected by the removal of a roaster, or adds a roaster to a new cafe
         
         def find_new_roaster(cafe):
             roaster_list = session.query(Roaster).all()
@@ -176,20 +201,31 @@ if __name__ == '__main__':
             print(f"{cafe.name} now serves {cafe.roaster_name}")
             restock_coffee(cafe)
 
+# Restocks coffee for a cafe after a new roaster is selected
+
         def restock_coffee(cafe):
             coffee_list = session.query(Coffee).filter(Coffee.roaster_id == cafe.roaster_id).all()
             old_coffee = session.query(CoffeeCafe).filter(CoffeeCafe.cafe_id == cafe.id).all()
+            picking = True
             
-            for coffee in old_coffee:
-                session.delete(coffee)
-                session.commit()
+            if len(old_coffee) > 0:
+                for coffee in old_coffee:
+                    session.delete(coffee)
+                    session.commit()
             while True:
                 for coffee in coffee_list:
                     print(f"{coffee.id} - {coffee.name}")
                 choice = int(input("Using the IDs above, select one coffee that this cafe serves (or enter 0 to finish selecting)"))
                 if choice == 0:
                     break
-
+                while session.query(Coffee).filter(Coffee.id == choice).first() not in coffee_list:
+                    for coffee in coffee_list:
+                        print(f"{coffee.id} - {coffee.name}")
+                    print("Invalid Input. Please select a coffee from the list above")
+                    choice = int(input("Using the IDs above, select one coffee that this cafe serves (or enter 0 to finish selecting)"))
+                    if choice == 0:
+                        picking = False
+                        break
                 else:
                     selected_coffee = session.query(Coffee).filter(Coffee.id == choice).first()
                     coffee_cafe = CoffeeCafe(
@@ -206,6 +242,8 @@ if __name__ == '__main__':
                     session.commit()
             print(f"{cafe.name} updated!")
 
+# Coffee Menu asks for user input and calls the appropriate function
+
         def coffee_menu():
             coffee_question = [inquirer.List('coffee_menu', 
                                               message="What would you like to do?",
@@ -220,13 +258,26 @@ if __name__ == '__main__':
                 delete_coffee()
             elif coffee_response['coffee_menu'] == "Edit Coffee":
                 edit_coffee()
-        
+
+# asks for coffee info and adds it to the database
+
         def add_coffee():
             name = input("What is the name of the roast?")
-            roast_level = int(input("What is the roast level on a scale of 1-10, with 1 being the lightest and 10 being the darkest?"))
+            roast_level = input("What is the roast level on a scale of 1-10, with 1 being the lightest and 10 being the darkest? (Whole numbers only, 0 to cancel)")
+            if roast_level == 0:
+                get_coffees()
+                coffee_menu()
+            while roast_level.isdigit() == False or int(roast_level) not in range(1, 11):
+                print("Invalid Input. Please enter a whole number between 1 and 10")
+                roast_level = input("What is the roast level on a scale of 1-10, with 1 being the lightest and 10 being the darkest? (Whole numbers only, 0 to cancel)")
             country = input("In which country were the beans grown?")
             get_roasters()
             roaster = input("Using their id from the list above, which roastery provides this coffee?")
+            roaster_check = session.query(Roaster).filter(Roaster.id == roaster).first() or None
+            while roaster_check == None:
+                print("Invalid Input. Please pick a roaster from the list above")
+                roaster = input("Using their id from the list above, which roastery provides this coffee?")
+                roaster_check = session.query(Roaster).filter(Roaster.id == roaster).first() or None
 
             new_coffee = Coffee(
                 name = name,
@@ -239,16 +290,29 @@ if __name__ == '__main__':
             get_coffees()
             print(f"{new_coffee.name} added!")
             coffee_menu()
+
+# Edits coffee info
         
         def edit_coffee():
             coffee_id = int(input("Using the id from the table above, which coffee would you like to edit?"))
             current_coffee = session.query(Coffee).filter(Coffee.id == coffee_id).first()
+            old_roaster = current_coffee.roaster_id
             while True:
                 new_name = input(f"What is the new name of this roast? (Currently {current_coffee.name})")
-                new_level = int(input(f"What is the new roast level? (Currently {current_coffee.roast_level})"))
+                new_level = input(f"What is the new roast level? (Currently {current_coffee.roast_level})")
+                while new_level.isdigit() == False or int(new_level) not in range(1, 11):
+                    print("Invalid Input. Please enter a whole number between 1 and 10")
+                    new_level = input(f"What is the new roast level? (Currently {current_coffee.roast_level})")
+
                 new_country = input(f"What is the new country of origin (Currently {current_coffee.country_of_origin})")
                 get_roasters()
                 new_roaster = input(f"Using their id above, select the roaster who produces this coffee (Currently {current_coffee.roaster_id} - {current_coffee.roaster.name})")
+                roaster_check = session.query(Roaster).filter(Roaster.id == new_roaster).first() or None
+                while roaster_check == None:
+                    input("Invalid Input. Please pick a roaster from the list above")
+                    new_roaster = input("Using their id from the list above, which roastery provides this coffee?")
+                    roaster_check = session.query(Roaster).filter(Roaster.id == new_roaster).first() or None
+                
                 roaster_name = session.query(Roaster).filter(Roaster.id == new_roaster).first().name
                 print(new_name) 
                 print(f"Roast Level - {new_level}") 
@@ -257,15 +321,23 @@ if __name__ == '__main__':
                 finished = input(f"Is this correct? Y/N")
                 if finished.upper() == "Y":
                     break
+# Waits for confirmation before updating the coffee
             current_coffee.name = new_name
             current_coffee.roast_level = new_level
             current_coffee.country_of_origin = new_country
             current_coffee.roaster_id = new_roaster
+            if new_roaster != old_roaster:
+                rels = session.query(CoffeeCafe).filter(CoffeeCafe.coffee_id == current_coffee.id).all()
+                for rel in rels:
+                    session.delete(rel)
+                    session.commit()
             session.add(current_coffee)
             session.commit()
             get_coffees()
             print(f"{current_coffee.name} updated!")
             coffee_menu()
+
+# Removes coffee from database.
 
         def delete_coffee():
             response = int(input("Using the id from the table above, which coffee would you like to delete? (Enter 0 to cancel)"))
@@ -285,6 +357,8 @@ if __name__ == '__main__':
                         coffee_menu()
                         break
 
+# Cafe Menu asks for user input and calls the appropriate function
+
         def cafe_menu():
             cafe_question = [inquirer.List('cafe_menu', 
                                               message="What would you like to do?",
@@ -299,56 +373,36 @@ if __name__ == '__main__':
                 edit_cafe()
             elif cafe_response['cafe_menu'] == "Remove Cafe":
                 remove_cafe()
-        
+
+# Asks for cafe info and adds it to the database, 
+# then calls find_new_roaster to add a roaster and coffees to the cafe
         def add_cafe():
             name = input("What is the name of the cafe?")
             location = input("Where are they located?")
             specialty = input("What is their specialty? (Or type 'None' if they don't have one)")
-            get_roasters()
-            roaster = input("Using their id from the list above, which roastery services this cafe?")
-            roaster_name = session.query(Roaster).filter(Roaster.id == roaster).first().name
             new_cafe = Cafe(
                 name = name,
                 location = location,
                 specialty = specialty,
-                roaster_id = roaster,
-                roaster_name = roaster_name
             )
 
             session.add(new_cafe)
             session.commit()
-
-            coffee_list = session.query(Coffee).filter(Coffee.roaster_id == new_cafe.roaster_id).all()
-            while True:
-                for coffee in coffee_list:
-                    print(f"{coffee.id} - {coffee.name}")
-                choice = int(input("Using the IDs above, select one coffee that this cafe serves (or select 0 to finish selecting)"))
-                if choice == 0:
-                    break
-                else:
-                    selected_coffee = session.query(Coffee).filter(Coffee.id == choice).first()
-                    coffee_cafe = CoffeeCafe(
-                        cafe = new_cafe,
-                        cafe_name = new_cafe.name,
-                        coffee = selected_coffee,
-                        coffee_name = selected_coffee.name,
-                        roaster_name = new_cafe.roaster.name
-                    )
-                    coffee_list.remove(coffee_cafe.coffee)
-                    print(f"{coffee_cafe.coffee_name} Added to {new_cafe.name}")
-                    session.add(coffee_cafe)
-                    session.commit()
-                
+            find_new_roaster(new_cafe)
             get_cafes()
             print(f"{new_cafe.name} added!")
             cafe_menu()
             
+# Edits cafe info
+            
         def edit_cafe():
-            cafe_id = int(input("Using the id from the table above, which coffee would you like to edit? (Or enter 0 to go back)"))
+            get_cafes()
+            cafe_id = int(input("Using the id from the table above, which cafe would you like to edit? (Or enter 0 to go back)"))
             if cafe_id == 0:
                 get_cafes()
                 cafe_menu()
             current_cafe = session.query(Cafe).filter(Cafe.id == cafe_id).first()
+            old_roaster = current_cafe.roaster_id
             while True:
                 new_name = input(f"What is the new name of this cafe? (Currently {current_cafe.name})")
                 new_location = input(f"What is the new location? (Currently {current_cafe.location})")
@@ -362,6 +416,9 @@ if __name__ == '__main__':
                 print(f"{roaster_name}")
                 finished = input(f"Is this correct? Y/N")
                 if finished.upper() == "Y":
+
+# waits for confirmation before updating the cafe
+                    
                     current_cafe.name = new_name
                     current_cafe.location = new_location
                     current_cafe.specialty = new_specialty
@@ -371,38 +428,16 @@ if __name__ == '__main__':
                     session.add(current_cafe)
                     session.commit()
                     break
+# if the roaster has changed, calls restock_coffee to update the cafe's coffees
+            if old_roaster != new_roaster:
+                print("Coffees served by this cafe must be updated!")
+                restock_coffee(current_cafe)
 
-            coffee_list = session.query(Coffee).filter(Coffee.roaster_id == current_cafe.roaster_id).all()
-            old_coffee = session.query(CoffeeCafe).filter(CoffeeCafe.cafe_id == current_cafe.id).all()
-            
-            for coffee in old_coffee:
-                session.delete(coffee)
-                session.commit()
-            while True:
-                for coffee in coffee_list:
-                    print(f"{coffee.id} - {coffee.name}")
-                choice = int(input("Using the IDs above, select one coffee that this cafe serves (or enter 0 to finish selecting)"))
-                if choice == 0:
-                    break
-
-                else:
-                    selected_coffee = session.query(Coffee).filter(Coffee.id == choice).first()
-                    coffee_cafe = CoffeeCafe(
-                        cafe = current_cafe,
-                        cafe_name = current_cafe.name,
-                        coffee = selected_coffee,
-                        coffee_name = selected_coffee.name,
-                        roaster_name = current_cafe.roaster.name
-                    )
-
-                    coffee_list.remove(coffee_cafe.coffee)
-                    print(f"{coffee_cafe.coffee_name} Added to {current_cafe.name}")
-                    session.add(coffee_cafe)
-                    session.commit()
             get_cafes()
             print(f"{current_cafe.name} updated!")
             cafe_menu()
-            
+
+# Removes cafe from database.
 
         def remove_cafe():
             response = int(input("Using the id from the table above, which cafe would you like to delete? (Enter 0 to cancel)"))
@@ -421,8 +456,13 @@ if __name__ == '__main__':
                         print(f"{to_delete.name} deleted!")
                         cafe_menu()
                         break
+                    else:
+                        get_cafes()
+                        cafe_menu()
+                        break
 
-
+# Gives the user the option to view cafes, roasters, or coffees, or exit the program
+                    
         def intro():
             intro_question =   [inquirer.List('main_menu',
                     message="What would you like to do?",

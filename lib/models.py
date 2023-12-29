@@ -1,6 +1,5 @@
-import datetime
-from sqlalchemy import ForeignKey, Column, Integer, String, create_engine, select
-from sqlalchemy.orm import DeclarativeBase, validates, relationship, Session
+from sqlalchemy import ForeignKey, Column, Integer, String, create_engine, func, UniqueConstraint, select
+from sqlalchemy.orm import Session, DeclarativeBase, relationship
 
 # definine Base with 2.0 syntax
 class Base(DeclarativeBase):
@@ -36,15 +35,6 @@ class Coffee(Base):
     cafes = relationship("CoffeeCafe", back_populates="coffee")
 
 
-# Confirms that roasts are measured on a scale of 1-10
-    @validates("roast_level")
-    def validate_roast_level(self, key, roast_level):
-        if 0 < roast_level <= 10:
-            return roast_level
-        else:
-            raise ValueError("Must be a value between 1 and 10")
-
-# defining Cafe class
 class Cafe(Base):
     __tablename__ = "cafes"
     id = Column(Integer, primary_key = True)
