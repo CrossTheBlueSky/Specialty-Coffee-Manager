@@ -59,8 +59,6 @@ if __name__ == '__main__':
                         coffee_string += f", {coffee.coffee_name}"
                 cafe_table.add_row([cafe.id, cafe.name, cafe.location, cafe.roaster_name, cafe.specialty, coffee_string])
            print(cafe_table)
-
-# All menus are defined here
            
 
 # Roaster Menu asks for user input and calls the appropriate function
@@ -142,6 +140,7 @@ if __name__ == '__main__':
                 finished = input(f"Is this correct? Y/N")
                 if finished.upper() == "Y":
                     break
+# Waits for confirmation before updating the roaster
             current_roaster.name = new_name
             current_roaster.location = new_location
             session.add(current_roaster)
@@ -180,7 +179,7 @@ if __name__ == '__main__':
             print(f"{to_delete.name} deleted!")
             roaster_menu()
 
-# Updates cafes that were affected by the removal of a roaster
+# Updates cafes that were affected by the removal of a roaster, or adds a roaster to a new cafe
         
         def find_new_roaster(cafe):
             roaster_list = session.query(Roaster).all()
@@ -322,6 +321,7 @@ if __name__ == '__main__':
                 finished = input(f"Is this correct? Y/N")
                 if finished.upper() == "Y":
                     break
+# Waits for confirmation before updating the coffee
             current_coffee.name = new_name
             current_coffee.roast_level = new_level
             current_coffee.country_of_origin = new_country
@@ -393,6 +393,8 @@ if __name__ == '__main__':
             print(f"{new_cafe.name} added!")
             cafe_menu()
             
+# Edits cafe info
+            
         def edit_cafe():
             get_cafes()
             cafe_id = int(input("Using the id from the table above, which cafe would you like to edit? (Or enter 0 to go back)"))
@@ -414,6 +416,9 @@ if __name__ == '__main__':
                 print(f"{roaster_name}")
                 finished = input(f"Is this correct? Y/N")
                 if finished.upper() == "Y":
+
+# waits for confirmation before updating the cafe
+                    
                     current_cafe.name = new_name
                     current_cafe.location = new_location
                     current_cafe.specialty = new_specialty
@@ -423,6 +428,7 @@ if __name__ == '__main__':
                     session.add(current_cafe)
                     session.commit()
                     break
+# if the roaster has changed, calls restock_coffee to update the cafe's coffees
             if old_roaster != new_roaster:
                 print("Coffees served by this cafe must be updated!")
                 restock_coffee(current_cafe)
@@ -430,7 +436,8 @@ if __name__ == '__main__':
             get_cafes()
             print(f"{current_cafe.name} updated!")
             cafe_menu()
-            
+
+# Removes cafe from database.
 
         def remove_cafe():
             response = int(input("Using the id from the table above, which cafe would you like to delete? (Enter 0 to cancel)"))
@@ -454,7 +461,8 @@ if __name__ == '__main__':
                         cafe_menu()
                         break
 
-
+# Gives the user the option to view cafes, roasters, or coffees, or exit the program
+                    
         def intro():
             intro_question =   [inquirer.List('main_menu',
                     message="What would you like to do?",
