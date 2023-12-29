@@ -188,7 +188,7 @@ if __name__ == '__main__':
                 print(f"{roaster.id} - {roaster.name}")
             new_roaster = None
             while True:
-                new_roaster = int(input(f"Using the id from the list above, which roaster would you like to select? (Selecting for {cafe.name})"))
+                new_roaster = input(f"Using the id from the list above, which roaster would you like to select? (Selecting for {cafe.name})")
                 roaster_check = session.query(Roaster).filter(Roaster.id == new_roaster).first() or None
                 if roaster_check != None:
                     cafe.roaster_id = new_roaster
@@ -206,7 +206,6 @@ if __name__ == '__main__':
         def restock_coffee(cafe):
             coffee_list = session.query(Coffee).filter(Coffee.roaster_id == cafe.roaster_id).all()
             old_coffee = session.query(CoffeeCafe).filter(CoffeeCafe.cafe_id == cafe.id).all()
-            picking = True
             
             if len(old_coffee) > 0:
                 for coffee in old_coffee:
@@ -224,7 +223,6 @@ if __name__ == '__main__':
                     print("Invalid Input. Please select a coffee from the list above")
                     choice = int(input("Using the IDs above, select one coffee that this cafe serves (or enter 0 to finish selecting)"))
                     if choice == 0:
-                        picking = False
                         break
                 else:
                     selected_coffee = session.query(Coffee).filter(Coffee.id == choice).first()
