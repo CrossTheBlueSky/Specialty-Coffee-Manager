@@ -1,6 +1,6 @@
 import datetime
-from sqlalchemy import ForeignKey, Column, Integer, String, create_engine, func, UniqueConstraint
-from sqlalchemy.orm import Session, DeclarativeBase, validates, relationship
+from sqlalchemy import ForeignKey, Column, Integer, String, create_engine, select
+from sqlalchemy.orm import DeclarativeBase, validates, relationship, Session
 
 # definine Base with 2.0 syntax
 class Base(DeclarativeBase):
@@ -44,7 +44,7 @@ class Coffee(Base):
         else:
             raise ValueError("Must be a value between 1 and 10")
 
-
+# defining Cafe class
 class Cafe(Base):
     __tablename__ = "cafes"
     id = Column(Integer, primary_key = True)
@@ -60,15 +60,8 @@ class Cafe(Base):
 #But since they can have many coffees from that roaster, a join table is necessary (many-to-many)
     coffees = relationship("CoffeeCafe", back_populates="cafe")
 
-# Each cafe can only appear once. This preserves the many-to-one relationship between cafes and roasters
-    __table_args__ = (
-        UniqueConstraint('id'),
-    )
-
-
 # Join table for coffees and cafes, since a coffee can be served at many cafes
 # and a cafe can serve many coffees
-    
 class CoffeeCafe(Base):
     __tablename__ = "coffee_cafe"
     id = Column(Integer, primary_key = True)
