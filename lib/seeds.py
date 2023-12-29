@@ -20,7 +20,7 @@ if __name__ == '__main__':
 # establish session so things can actually be added to the db
     with Session(engine) as session:
 
-# make 20 roasters and add to db
+# make 10 roasters and add to db
         for i in range(10):
             roaster = Roaster(
                 name = f"{faker.word().capitalize()} {faker.word().capitalize()} Roastery",

@@ -406,7 +406,13 @@ if __name__ == '__main__':
                 new_location = input(f"What is the new location? (Currently {current_cafe.location})")
                 new_specialty = input(f"What is the new specialty? (Currently {current_cafe.specialty})")
                 get_roasters()
-                new_roaster = input(f"Using their id above, select the roaster who services this cafe> (Currently {current_cafe.roaster_id} - {current_cafe.roaster.name})")
+                new_roaster = input(f"Using their id above, select the roaster who services this cafe (Currently {current_cafe.roaster_id} - {current_cafe.roaster.name})")
+                roaster_check = session.query(Roaster).filter(Roaster.id == new_roaster).first() or None
+                while roaster_check == None:
+                    input("Invalid Input. Please pick a roaster from the list above")
+                    new_roaster = input(f"Using their id from the list above, select the roaster who services this cafe? (Currently {current_cafe.roaster_id} - {current_cafe.roaster.name})")
+                    roaster_check = session.query(Roaster).filter(Roaster.id == new_roaster).first() or None
+                
                 roaster_name = session.query(Roaster).filter(Roaster.id == new_roaster).first().name
                 print(new_name) 
                 print(new_location) 
