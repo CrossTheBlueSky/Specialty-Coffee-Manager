@@ -6,6 +6,7 @@ if __name__ == '__main__':
 
 # Welcomes the user and establishes a session
     with Session(engine) as session:
+        print(ascii)
         print("Hello, Weird Coffee Person!")
         print("Welcome to your Specialty Coffee Manager")
 
