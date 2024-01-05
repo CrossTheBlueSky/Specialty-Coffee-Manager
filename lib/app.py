@@ -42,7 +42,7 @@ if __name__ == '__main__':
                         cafe_string = f"{rel.cafe_name}"
                     else:
                         cafe_string += f", {rel.cafe_name}"
-                coffee_table.add_row([coffee.id, coffee.name, coffee.roast_level, coffee.country_of_origin, coffee.roaster.name, cafe_string])
+                coffee_table.add_row([coffee.id, coffee.name, coffee.roast_level, coffee.country_of_origin, coffee.roaster_name, cafe_string])
             print(coffee_table)
 
 # Get all cafes from the database

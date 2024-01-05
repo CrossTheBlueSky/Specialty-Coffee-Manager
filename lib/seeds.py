@@ -41,7 +41,8 @@ if __name__ == '__main__':
                 name = f"{faker.word().capitalize()} Blend",
                 roast_level = random.randint(1, 10),
                 country_of_origin = faker.country(),
-                roaster_id = current_roaster
+                roaster_id = current_roaster,
+                roaster_name = session.query(Roaster).filter(current_roaster == Roaster.id).first().name
             )
             session.add(coffee)
             session.commit()
@@ -59,7 +60,7 @@ if __name__ == '__main__':
             cafe = Cafe(
                 name = f"The {faker.word().capitalize()} and {faker.word().capitalize()}",
                 specialty = specialty_list[random.randint(0, 3)],
-                location = faker.address(),
+                location = f"{faker.city()}, {faker.state()}",
                 roaster_name = f"{roaster_name}",
                 roaster_id = roaster_num
             )

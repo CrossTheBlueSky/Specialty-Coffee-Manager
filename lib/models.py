@@ -26,6 +26,7 @@ class Coffee(Base):
     name = Column(String)
     country_of_origin = Column(String)
     roast_level = Column(Integer)
+    roaster_name = Column(String)
     roaster_id = Column(Integer, ForeignKey('roasters.id'))
 
 
