@@ -215,14 +215,18 @@ if __name__ == '__main__':
             while True:
                 for coffee in coffee_list:
                     print(f"{coffee.id} - {coffee.name}")
-                choice = int(input("Using the IDs above, select one coffee that this cafe serves (or enter 0 to finish selecting)"))
+                choice = input("Using the IDs above, select one coffee that this cafe serves (or enter 0 to finish selecting)")
+                if choice.isdigit() == True:
+                    choice = int(choice)
                 if choice == 0:
                     break
                 while session.query(Coffee).filter(Coffee.id == choice).first() not in coffee_list:
                     for coffee in coffee_list:
                         print(f"{coffee.id} - {coffee.name}")
                     print("Invalid Input. Please select a coffee from the list above")
-                    choice = int(input("Using the IDs above, select one coffee that this cafe serves (or enter 0 to finish selecting)"))
+                    choice = input("Using the IDs above, select one coffee that this cafe serves (or enter 0 to finish selecting)")
+                    if choice.isdigit() == True:
+                        choice = int(choice)
                     if choice == 0:
                         break
                 else:
@@ -239,7 +243,6 @@ if __name__ == '__main__':
                     print(f"{coffee_cafe.coffee_name} Added to {cafe.name}")
                     session.add(coffee_cafe)
                     session.commit()
-            print(f"{cafe.name} updated!")
 
 # Coffee Menu asks for user input and calls the appropriate function
 
@@ -396,7 +399,9 @@ if __name__ == '__main__':
             
         def edit_cafe():
             get_cafes()
-            cafe_id = int(input("Using the id from the table above, which cafe would you like to edit? (Or enter 0 to go back)"))
+            cafe_id = input("Using the id from the table above, which cafe would you like to edit? (Or enter 0 to go back)")
+            while cafe_id.isdigit() == False or session.query(Cafe).filter(Cafe.id == cafe_id).first() == None:
+                cafe_id = input("Invalid Input. Please enter a cafe id from the table above")
             if cafe_id == 0:
                 get_cafes()
                 cafe_menu()
@@ -445,7 +450,10 @@ if __name__ == '__main__':
 # Removes cafe from database.
 
         def remove_cafe():
-            response = int(input("Using the id from the table above, which cafe would you like to delete? (Enter 0 to cancel)"))
+            response = input("Using the id from the table above, which cafe would you like to delete? (Enter 0 to cancel)")
+            while response.isdigit() == False or session.query(Cafe).filter(Cafe.id == response).first() == None:
+                response = input("Invalid Input. Please enter a cafe id from the table above")
+            response = int(response)
             while True:
                 if response == 0:
                     get_cafes()
